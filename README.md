@@ -91,5 +91,3 @@ pokemonTCG/
 
 [Jenna Hall] - [jhal990@wgu.edu]
 ```
-
-Built a Pokémon TCG card search web app using Flask (Python) backend and HTML/CSS/JavaScript frontend. Integrated PokémonTCG API to fetch and display card data including images, stats, and abilities. Implemented responsive design and RESTful architecture. Deployed full-stack application demonstrating API integration, data handling, and user interface design.
