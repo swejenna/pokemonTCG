@@ -8,7 +8,7 @@
         
         <div class="search-container">
             <input type="text" id="cardSearch" placeholder="Enter card name (e.g., Pikachu, Charizard)">
-            <button onclick="searchCard()">Search</button>
+            <button id="searchBtn">Search</button>
         </div>
         
         <div id="loading" class="loading" style="display: none;">Searching for cards...</div>
@@ -18,5 +18,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/search.js') }}"></script>
 {% endblock %}
+
