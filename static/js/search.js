@@ -1,3 +1,62 @@
+import { apiFetch, ApiError } from "./apiClient.js";
+
+async function searchCardWithRetry() {
+	const loadingEl = document.getElementById("loading");
+	const errorEl = document.getElementById("error");
+
+	let attempt = 0;
+
+	const MAX_RETRIES = 5;
+	const RETRY_DELAYS_SECONDS = [5, 10, 15, 30, 60];
+
+	loadingEl.style.display = "block";
+	loadingEl.textContent = "Searching for cards...";
+	errorEl.style.display = "none";
+
+	while (true) {
+		try {
+			await searchCard();
+			return;
+		} catch (error) {
+			if (!(error instanceof ApiError) || !error.retryable) { // other exception, let it bubble up
+				throw error;
+			}
+
+			// start retry
+			attempt++;
+
+			if (attempt > MAX_RETRIES) {
+				loadingEl.style.display = "none";
+				errorEl.textContent =
+					"Sorry, they must be really busy right now... try again later I guess :/";
+				errorEl.style.display = "block";
+				return;
+			}
+
+			// seconds for us
+			const delaySeconds =
+				RETRY_DELAYS_SECONDS[
+					Math.min(
+						attempt - 1,
+						RETRY_DELAYS_SECONDS.length - 1,
+					)
+				];
+
+			// millis for the next promise delay
+			const delay = delaySeconds * 1000;
+
+			// debug
+			loadingEl.textContent = `Oopsie! Server-senpei encountered a 5xx error ~nya ~nya -- retry ${attempt} in ${delaySeconds} seconds`;
+			loadingEl.style.display = "block";
+			console.log(loadingEl.textContent);
+			console.log(error);
+			console.log(error.type);
+
+			await new Promise((r) => setTimeout(r, delay));
+		}
+	}
+}
+
 async function searchCard() {
 	const searchTerm = document
 		.getElementById("cardSearch")
@@ -20,19 +79,9 @@ async function searchCard() {
 	loadingEl.style.display = "block";
 
 	try {
-		const response = await fetch(
+		const cards = await apiFetch(
 			`/api/sdk/search?name=${encodeURIComponent(searchTerm)}`,
 		);
-
-		if (!response.ok) {
-			throw new Error(
-				response.status,
-				"Failed to fetch cards",
-			);
-		}
-
-		const cards = await response.json(); // this is a card object array
-		// console.log(cards);
 
 		loadingEl.style.display = "none";
 
@@ -42,9 +91,18 @@ async function searchCard() {
 			return;
 		}
 
+		// debug: force error to see retries
+		// throw { type: "server", status: 500 };
+
 		displayCards(cards);
 	} catch (error) {
 		loadingEl.style.display = "none";
+
+		// re-throw server errors for the wrapper
+		if (error?.type === "server") {
+			throw error;
+		}
+
 		errorEl.textContent = `Error: ${error.message}`;
 		errorEl.style.display = "block";
 	}
@@ -80,9 +138,14 @@ document
 	.getElementById("cardSearch")
 	.addEventListener("keypress", function (e) {
 		if (e.key === "Enter") {
-			searchCard();
+			searchCardWithRetry();
 		}
 	});
+
+document
+	.getElementById("searchBtn")
+	.addEventListener("click", searchCardWithRetry);
+
 
 function cardTemplate(card) {
 	const line = (label, value) =>
