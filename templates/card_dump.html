@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Card Dump{% endblock %}
+
+{% block styles %}
+<style>
+    .json-dump {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        overflow-x: auto;
+        font-size: 14px;
+        font-family: 'Courier New', Courier, monospace;
+        line-height: 1.5;
+        color: #333;
+        max-height: 70vh;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="justify-content: center;">Card JSON</h1>
+
+<pre id="cardDump" class="json-dump">Loading…</pre>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const cardId = "{{ card_id }}";
+
+    async function dump() {
+        try {
+            const res = await fetch(`/api/sdk/card/${cardId}`);
+            if (!res.ok) {
+                throw new Error("Failed to fetch card");
+            }
+
+            const card = await res.json();
+
+            document.getElementById("cardDump").textContent =
+                JSON.stringify(card, null, 2);
+
+        } catch (err) {
+            document.getElementById("cardDump").textContent =
+                "Error: " + err.message;
+        }
+    }
+
+    dump();
+</script>
+{% endblock %}

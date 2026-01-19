@@ -166,18 +166,22 @@
                     throw new Error(response.status, 'Failed to fetch cards');
                 }
                 
-                const cards = await response.json(); // this is a card object array
-                // console.log(cards);
+                const json = await response.json(); // this is a card object array
+                console.log(json);
+
                 
                 loadingEl.style.display = 'none';
                 
-                if (!cards || cards.length === 0) {
+                
+                
+                if (!json || json.length === 0) {
                     errorEl.textContent = "No cards found";
                     errorEl.style.display = "block";
                     return;
                 }
 
-                displayCards(cards)
+
+                displayCards(json)
                 
             } catch (error) {
                 loadingEl.style.display = 'none';
@@ -193,12 +197,6 @@
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-container';
                 cardDiv.innerHTML = cardTemplate(card); // template literal refactored below
-
-                // link to card details page
-                cardDiv.style.cursor = 'pointer';
-                cardDiv.onclick = () => {
-                    window.location.href = `/card/${card.id}`
-                }
 
                 resultsEl.appendChild(cardDiv);
             });

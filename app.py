@@ -3,10 +3,12 @@ import requests
 import os
 from dotenv import load_dotenv
 
+
 #load in enviroment variables
 load_dotenv()
 
 app = Flask(__name__)
+
 
 # get api key from env
 POKEMON_API_KEY = os.getenv('POKEMON_API_KEY', '')
@@ -15,9 +17,16 @@ POKEMON_API_BASE = 'https://api.pokemontcg.io/v2'
 
 #headers with auth
 HEADERS = {
+    "Accept": "application/json",
     'X-Api-Key': POKEMON_API_KEY
 }
 
+
+# other routes: /api/sdk/{search, card/<card_id>}
+from api.routes import routes
+routes(app)
+
+# your routes
 @app.route('/')
 def index():
     return render_template('index.html')
