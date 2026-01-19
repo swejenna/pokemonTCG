@@ -1,16 +1,10 @@
 import json
 import os
-from pprint import pprint
 import ssl
 from flask import jsonify, render_template, request
 from requests import RequestException, Timeout
 from urllib.error import URLError
 from pokemontcgsdk import Card
-from pokemontcgsdk import Set
-from pokemontcgsdk import Type
-from pokemontcgsdk import Supertype
-from pokemontcgsdk import Subtype
-from pokemontcgsdk import Rarity
 from pokemontcgsdk import RestClient
 from pokemontcgsdk import PokemonTcgException
 from dotenv import load_dotenv
