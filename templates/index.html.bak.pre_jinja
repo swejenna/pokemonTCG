@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon TCG Card Search</title>
+
+</head>
+<body>
+    <div class="container">
+        <h1>🎴 Pokémon Card Search</h1>
+        
+        <div class="search-container">
+            <input type="text" id="cardSearch" placeholder="Enter card name (e.g., Pikachu, Charizard)">
+            <button onclick="searchCard()">Search</button>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">Searching for cards...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function searchCard() {
+            const searchTerm = document.getElementById('cardSearch').value.trim();
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const resultsEl = document.getElementById('results');
+            
+            // Clear previous results
+            errorEl.style.display = 'none';
+            errorEl.textContent = '';
+            resultsEl.innerHTML = '';
+            
+            if (!searchTerm) {
+                errorEl.textContent = 'Please enter a card name';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            loadingEl.style.display = 'block';
+            
+            try {
+                const response = await fetch(`/api/sdk/search?name=${encodeURIComponent(searchTerm)}`);
+                
+                if (!response.ok) {
+                    throw new Error(response.status, 'Failed to fetch cards');
+                }
+                
+                const cards = await response.json(); // this is a card object array
+                // console.log(cards);
+                
+                loadingEl.style.display = 'none';
+                
+                if (!cards || cards.length === 0) {
+                    errorEl.textContent = "No cards found";
+                    errorEl.style.display = "block";
+                    return;
+                }
+
+                displayCards(cards)
+                
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                errorEl.textContent = `Error: ${error.message}`;
+                errorEl.style.display = 'block';
+            }
+        }
+        
+        function displayCards(cards) {
+            const resultsEl = document.getElementById('results');
+            
+            cards.slice(0, 5).forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card-container';
+                cardDiv.innerHTML = cardTemplate(card); // template literal refactored below
+
+                // link to card details page
+                cardDiv.style.cursor = 'pointer';
+                cardDiv.onclick = () => {
+                    window.location.href = `/card/${card.id}`
+                }
+
+                resultsEl.appendChild(cardDiv);
+            });
+            
+            if (cards.length > 5) {
+                const moreResults = document.createElement('p');
+                moreResults.style.textAlign = 'center';
+                moreResults.style.color = '#666';
+                moreResults.textContent = `Showing 5 of ${cards.length} results`;
+                resultsEl.appendChild(moreResults);
+            }
+        }
+        
+        document.getElementById('cardSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchCard();
+            }
+        });
+
+        function cardTemplate(card) {
+            const line = (label, value) => value ? `<p><strong>${label}:</strong> ${value}</p>` : "";
+
+            return `
+                <div>
+                    <img src="${card.images.large}" alt="${card.name}" class="card-image">
+                </div>
+
+                <div class="card-details">
+                    <h2>${card.name}</h2>
+                    <p><strong>Set:</strong> ${card.set.name}</p>
+                    <p><strong>Number:</strong> ${card.number}/${card.set.printedTotal}</p>
+                    <p><strong>Rarity:</strong> ${card.rarity || 'N/A'}</p>
+                    ${line("Types", card.types?.join(", "))}
+                    ${line("HP", card.hp)}
+                    ${line("Artist", card.artist)}
+                    ${line("Flavor Text", card.flavorText)}
+
+                    <!-- another way to handle ternaries ^^^
+                    ${card.types ? `<p><strong>Types:</strong> ${card.types.join(', ')}</p>` : ''}
+                    ${card.hp ? `<p><strong>HP:</strong> ${card.hp}</p>` : ''}
+                    ${card.artist ? `<p><strong>Artist:</strong> ${card.artist}</p>` : ''}
+                    ${card.flavorText ? `<p><strong>Flavor Text:</strong> ${card.flavorText}</p>` : ''}
+                    -->
+                    
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
